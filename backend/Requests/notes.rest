@@ -1,0 +1,12 @@
+###
+GET  http://localhost:3003/api/notes 
+
+### post 
+POST http://localhost:3003/api/notes 
+Content-Type: application/json 
+Authorization: 
+
+{
+    "content": "HTML is easy",
+    "important": "true"
+}
