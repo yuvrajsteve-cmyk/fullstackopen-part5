@@ -1,16 +1,7 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import Note from './components/Note'
 import Notification from './components/Notification'
 import Footer from './components/Footer'
-
-const baseUrl = '/api/notes'
-const loginUrl = '/api/login'
-let token = null
-
-const setToken = newToken => {
-  token = `Bearer ${newToken}`
-}
 
 const App = () => {
   const [notes, setNotes] = useState([])
@@ -22,9 +13,6 @@ const App = () => {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    axios.get(baseUrl).then(response => {
-      setNotes(response.data)
-    })
   }, [])
 
   useEffect(() => {
@@ -32,58 +20,42 @@ const App = () => {
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
-      setToken(user.token)
     }
   }, [])
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedNoteappUser')
     setUser(null)
-    token = null
   }
 
   const addNote = (event) => {
     event.preventDefault()
-    const config = { headers: { Authorization: token } }
     const noteObject = {
+      id: notes.length + 1,
       content: newNote,
-      important: true
+      important: Math.random() > 0.5,
     }
 
-    axios.post(baseUrl, noteObject, config).then(response => {
-      setNotes(notes.concat(response.data))
-      setNewNote('')
-    })
+    setNotes(notes.concat(noteObject))
+    setNewNote('')
   }
 
   const toggleImportanceOf = (id) => {
     const note = notes.find(n => n.id === id)
     const changedNote = { ...note, important: !note.important }
-    const config = { headers: { Authorization: token } }
-
-    axios.put(`${baseUrl}/${id}`, changedNote, config)
-      .then(response => {
-        setNotes(notes.map(note => note.id !== id ? note : response.data))
-      })
-      .catch(() => {
-        setErrorMessage(`Note '${note.content}' was already removed from server`)
-        setTimeout(() => setErrorMessage(null), 5000)
-        setNotes(notes.filter(n => n.id !== id))
-      })
+    setNotes(notes.map(n => n.id !== id ? n : changedNote))
   }
 
-  const handleLogin = async (event) => {
+  const handleLogin = (event) => {
     event.preventDefault()
-    try {
-      const response = await axios.post(loginUrl, { username, password })
-      const user = response.data
-
-      window.localStorage.setItem('loggedNoteappUser', JSON.stringify(user))
-      setToken(user.token)
-      setUser(user)
+    
+    if (username === 'admin' && password === 'secret') {
+      const dummyUser = { username, name: 'Super User', token: 'dummy-token' }
+      window.localStorage.setItem('loggedNoteappUser', JSON.stringify(dummyUser))
+      setUser(dummyUser)
       setUsername('')
       setPassword('')
-    } catch {
+    } else {
       setErrorMessage('wrong credentials')
       setTimeout(() => setErrorMessage(null), 5000)
     }
@@ -98,7 +70,6 @@ const App = () => {
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
       <h1 style={{ color: 'green', fontStyle: 'italic', margin: '0 0 10px 0' }}>Notes app</h1>
-
 
       <Notification message={errorMessage} />
 
@@ -138,7 +109,6 @@ const App = () => {
 
       <ul style={{ paddingLeft: '20px' }}>
         {notesToShow.map(note => (
-
           <Note
             key={note.id}
             note={note}
@@ -146,7 +116,6 @@ const App = () => {
           />
         ))}
       </ul>
-
 
       <Footer />
     </div>
