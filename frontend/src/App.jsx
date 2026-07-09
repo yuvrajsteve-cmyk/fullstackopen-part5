@@ -9,6 +9,7 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState(null)
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
+  const [showAll, setShowAll] = useState(true)
 
   useEffect(() => {
     noteService
@@ -22,15 +23,13 @@ const App = () => {
     const loggedUserJSON = window.localStorage.getItem('loggedNoteappUser')
     if(loggedUserJSON){
       const user = JSON.parse(loggedUserJSON)
-      setUser(user)
       noteService.setToken(user.token)
+      setUser(user)
     }
   }, [])
 
   const handleLogin = async (e) => {
     e.preventDefault()
-
-    if (!username.trim() || !password.trim()) return
 
     try {
       const loggedUser = await loginService.login({ username, password })
@@ -38,13 +37,12 @@ const App = () => {
       window.localStorage.setItem(
         'loggedNoteappUser', JSON.stringify(loggedUser)
       )
-      setUser(loggedUser)
       noteService.setToken(loggedUser.token)
+      setUser(loggedUser)
       setUsername('')
       setPassword('')
     }
     catch (error) {
-      console.error(error)
       setErrorMessage('wrong credentials')
       setTimeout(() => {
         setErrorMessage(null)
@@ -62,31 +60,30 @@ const App = () => {
         setNotes(notes.map(n => n.id !== id ? n : returnedNote))
       })
       .catch(error => {
-        console.error(error)
         setErrorMessage(`The note '${note.content}' was already deleted from server`)
         setTimeout(() => setErrorMessage(null), 5000)
+        setNotes(notes.filter(n => n.id !== id))
       })
   }
 
-  const addNote = async (e) => {
+  const addNote = (e) => {
     e.preventDefault()
 
-    if (!newNote.trim() || !user) return
-
-    try {
-      const noteObject = {
-        content: newNote,
-        important: Math.random() > 0.5,
-      }
-      await noteService.create(noteObject, user.token)
-      const updatedNotes = await noteService.getAll()
-      setNotes(updatedNotes)
-      setNewNote('')
-    } catch (error) {
-      console.error(error)
-      setErrorMessage('Failed to create note. Please check if you are logged in.')
-      setTimeout(() => setErrorMessage(null), 5000)
+    const noteObject = {
+      content: newNote,
+      important: Math.random() > 0.5,
     }
+
+    noteService
+      .create(noteObject)
+      .then(returnedNote => {
+        setNotes(notes.concat(returnedNote))
+        setNewNote('')
+      })
+      .catch(error => {
+        setErrorMessage('Failed to create note')
+        setTimeout(() => setErrorMessage(null), 5000)
+      })
   }
 
   const deleteNoteOf = (id) => {
@@ -97,7 +94,6 @@ const App = () => {
           setNotes(notes.filter(n => n.id !== id))
         })
         .catch(error => {
-          console.error(error)
           setErrorMessage('This note was already deleted from server')
           setTimeout(() => setErrorMessage(null), 5000)
         })
@@ -112,23 +108,14 @@ const App = () => {
           setNotes([])
         })
         .catch(error => {
-          console.error(error)
           setErrorMessage('Failed to clear notes from server')
           setTimeout(() => setErrorMessage(null), 5000)
         })
     }
   }
 
-  return (
+  const loginForm = () => (
     <div>
-      <h1>Notes app</h1>
-
-      {user === null ? (
-        <p>login form</p>
-      ) : (
-        <h1>username {user?.name}</h1>
-      )}
-
       <h2>login</h2>
       <form onSubmit={handleLogin}>
         <div>
@@ -149,8 +136,41 @@ const App = () => {
         </div>
         <button type='submit'>login</button>
       </form>
+    </div>
+  )
+
+  const noteForm = () => (
+    <form onSubmit={addNote}>
+      <input type='text' value={newNote}
+        onChange={({ target }) => setNewNote(target.value)}
+      />
+      <button type='submit'>save</button>
+    </form>
+  )
+
+  const notesToShow = showAll
+    ? notes
+    : notes.filter(note => note.important)
+
+  return (
+    <div>
+      <h1>Notes app</h1>
 
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+
+      {!user && loginForm()}
+      {user && (
+        <div>
+          <p>{user.name} logged in</p>
+          {noteForm()}
+        </div>
+      )}
+
+      <div>
+        <button onClick={() => setShowAll(!showAll)}>
+          show {showAll ? 'important' : 'all'}
+        </button>
+      </div>
 
       <div>
         {notes.length > 0 && (
@@ -160,7 +180,7 @@ const App = () => {
         )}
 
         <ul>
-          {notes.map(note => (
+          {notesToShow.map(note => (
             <li key={note.id}>
               {note.content}{' '}
               <button onClick={() => toggleImportanceOf(note.id)}>
@@ -173,22 +193,8 @@ const App = () => {
           ))}
         </ul>
       </div>
-
-      <div>
-        <form onSubmit={addNote}>
-          <input type='text' value={newNote}
-            onChange={({ target }) => setNewNote(target.value)}
-          />
-          <button type='submit'>save</button>
-        </form>
-      </div>
-
     </div>
   )
 }
 
 export default App
-
-
-
-
