@@ -4,7 +4,7 @@ GET  http://localhost:3003/api/notes
 ### post 
 POST http://localhost:3003/api/notes 
 Content-Type: application/json 
-Authorization: 
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InNhdGluZGVyIiwiaWQiOiI2YTUwZDg1ZTFhZGE5NmI1MTgxMTk0ZWMiLCJpYXQiOjE3ODM2ODM2MjQsImV4cCI6MTc4MzY4NzIyNH0.bmC6Qafzgcq6xvywpetD44qoVizHlmd4JqyprTNLT90
 
 {
     "content": "HTML is easy",

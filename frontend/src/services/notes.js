@@ -1,11 +1,15 @@
 import axios from 'axios'
 const baseUrl = 'http://localhost:3003/api/notes'
 
-const setToken = () => {}
+let token = null
 
-const create = async (newObject, userToken) => {
+const setToken = newToken => {
+  token = `Bearer ${newToken}`
+}
+
+const create = async (newObject) => {
   const config = {
-    headers: { Authorization: `Bearer ${userToken}` },
+    headers: { Authorization: token},
   }
   const response = await axios.post(baseUrl, newObject, config)
   return response.data

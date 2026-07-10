@@ -1,25 +1,27 @@
-const LoginForm = ({
-  handleSubmit,
-  handleUsernameChange,
-  handlePasswordChange,
-  username,
-  password
-}) => {
+const LoginForm = (props) => {
   return (
     <div>
-      <h2>login</h2>
+      <h2>Login</h2>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={props.handleSubmit}>
         <div>
-                username
-          <input type="text" value={username}
-            onChange={handleUsernameChange} />
+          username
+          <input
+            name="Username" 
+            value={props.username}
+            onChange={props.handleUsernameChange}
+            autoComplete="off" 
+          />
         </div>
         <div>
-                password
-          <input type="text"
-            value={password}
-            onChange={handlePasswordChange}/>
+          password
+          <input
+            type="password"
+            name="Password"
+            value={props.password}
+            onChange={props.handlePasswordChange}
+            autoComplete="current-password"
+          />
         </div>
         <button type="submit">login</button>
       </form>
