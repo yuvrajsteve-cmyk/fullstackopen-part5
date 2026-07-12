@@ -57,18 +57,40 @@ const App = () => {
       console.log('Error updating likes' , exception)
     }
   }
-      
-  const addBlog = async (blogObject) => {
-    try {
-      const newBlog = await blogService.create(blogObject) 
-      setBlogs(blogs.concat(newBlog))
-      blogFormRef.current.toggleVisibility()
-      setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
-      setTimeout(() => { setMessage(null) }, 5000)
-    } catch (exception) {
-      console.log('this error', exception.response?.data || exception)
+
+  const handleDelete = async (id, blogTitle, blogAuthor) => {
+    if (window.confirm(`Remove blog ${blogTitle} by ${blogAuthor}?`)) {
+      try {
+        await blogService.remove(id)
+        setBlogs(blogs.filter(blog => blog.id !== id))
+        setMessage('Blog remove successfully')
+        setTimeout(() => setMessage(null), 5000)
+      } catch (exception) {
+          console.log('Error deleting blogs', exception)
+      }
     }
   }
+      
+  const addBlog = async (blogObject) => {
+  try {
+    const newBlog = await blogService.create(blogObject) 
+    
+    const blogWithUserFields = {
+      ...newBlog,
+      user: {
+        id: newBlog.user,
+        username: user.username,
+        name: user.name
+      }
+    }
+    setBlogs(blogs.concat(blogWithUserFields)) 
+    blogFormRef.current.toggleVisibility()
+    setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
+    setTimeout(() => { setMessage(null) }, 5000)
+  } catch (exception) {
+    console.log('this error', exception.response?.data || exception)
+  }
+}
 
   const handleLogout = async () => {
     window.localStorage.removeItem('loggedBlogappUser')
@@ -140,7 +162,12 @@ const App = () => {
         blogs 
         .toSorted((a, b) => b.likes - a.likes)
         .map(blog => 
-          <Blog key={blog.id} blog={blog} updatedBlog={handleLikes} />
+          <Blog 
+            key={blog.id} 
+            blog={blog}
+            updatedBlog={handleLikes}
+            deleteBlog={handleDelete}
+            currentUser={user} />
         )
       }
     </div>
