@@ -44,6 +44,15 @@ const App = () => {
       setTimeout(() => { setMessage(null) }, 5000)
     }
   }
+
+  const handleLikes = async (id, blogObject) => {
+    try{
+      const updatedBlog = await blogService.update(id, blogObject)
+      setBlogs(blogs.map(blog => blog.id === id ? updatedBlog : blog))
+    }catch (exception) {
+      console.log('Error updating likes' , exception)
+    }
+  }
       
   const addBlog = async (blogObject) => {
     try {
@@ -125,7 +134,7 @@ const App = () => {
       <h2>username {user?.name} <button onClick={handleLogout}>logout</button></h2>
       {
         blogs.map(blog => 
-         <Blog key={blog.id} blog={blog}/>
+         <Blog key={blog.id} blog={blog} updatedBlog={handleLikes}/>
         )
       }
     </div>
