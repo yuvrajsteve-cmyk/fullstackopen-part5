@@ -3,6 +3,7 @@ import loginService from './services/login'
 import noteService from './services/notes'
 import LoginForm from './components/LoginForm'
 import Toggleable from './components/Toggleable'
+import NoteForm from './components/NoteForm'
 
 const App = () => {
   const [username, setUsername] = useState('')
@@ -10,9 +11,7 @@ const App = () => {
   const [user, setUser] = useState(null)
   const [errorMessage, setErrorMessage] = useState(null)
   const [notes, setNotes] = useState([])
-  const [newNote, setNewNote] = useState('')
   const [showAll, setShowAll] = useState(true)
-  console.log(newNote)
 
   useEffect(() => {
     noteService
@@ -36,7 +35,7 @@ const App = () => {
 
     try {
       const loggedUser = await loginService.login({ username, password })
-      
+
       noteService.setToken(loggedUser.token)
 
       window.localStorage.setItem(
@@ -70,30 +69,15 @@ const App = () => {
       })
   }
 
-  const addNote = (e) => {
-    e.preventDefault()
-    console.log(e)
-
-    if (!newNote.trim()) {
-      setErrorMessage('Note content cannot be empty')
-      setTimeout(() => setErrorMessage(null), 5000)
-      return
-    }
-
-    const noteObject = {
-      content: newNote,
-      important: Math.random() > 0.5,
-    }
-
+  const addNote = (noteObject) => {
     noteService
       .create(noteObject)
       .then(returnedNote => {
         setNotes(notes.concat(returnedNote))
-        setNewNote('')
       })
-      .catch( (error) => {
+      .catch((error) => {
         const msg = error.response?.data?.error || 'failed to create note'
-        setErrorMessage('Failed to create note')
+        setErrorMessage(msg)
         setTimeout(() => setErrorMessage(null), 5000)
       })
   }
@@ -126,16 +110,6 @@ const App = () => {
     }
   }
 
-  const noteForm = () => (
-    <form onSubmit={addNote}>
-      <input
-        type='text' value={newNote}
-        onChange={({ target }) => setNewNote(target.value)}
-      />
-      <button type='submit'>save</button>
-    </form>
-  )
-
   const notesToShow = showAll
     ? notes
     : notes.filter(note => note.important)
@@ -160,7 +134,7 @@ const App = () => {
       {user && (
         <div>
           <p>{user.name} logged in</p>
-          {noteForm()}
+          <NoteForm createNote={addNote} />
         </div>
       )}
 
