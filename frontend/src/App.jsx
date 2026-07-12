@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import loginService from './services/login'
 import noteService from './services/notes'
 import LoginForm from './components/LoginForm'
+import Toggleable from './components/Toggleable'
 
 const App = () => {
   const [username, setUsername] = useState('')
@@ -11,7 +12,6 @@ const App = () => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
   const [showAll, setShowAll] = useState(true)
-  const [loginVisible, setLoginVisible] = useState(false)
   console.log(newNote)
 
   useEffect(() => {
@@ -36,11 +36,12 @@ const App = () => {
 
     try {
       const loggedUser = await loginService.login({ username, password })
+      
+      noteService.setToken(loggedUser.token)
 
       window.localStorage.setItem(
         'loggedNoteappUser', JSON.stringify(loggedUser)
       )
-      noteService.setToken(loggedUser.token)
       setUser(loggedUser)
       setUsername('')
       setPassword('')
@@ -76,6 +77,7 @@ const App = () => {
     if (!newNote.trim()) {
       setErrorMessage('Note content cannot be empty')
       setTimeout(() => setErrorMessage(null), 5000)
+      return
     }
 
     const noteObject = {
@@ -103,7 +105,7 @@ const App = () => {
         .then(() => {
           setNotes(notes.filter(n => n.id !== id))
         })
-        .catch(error => {
+        .catch( () => {
           setErrorMessage('This note was already deleted from server')
           setTimeout(() => setErrorMessage(null), 5000)
         })
@@ -117,34 +119,11 @@ const App = () => {
         .then(() => {
           setNotes([])
         })
-        .catch(error => {
+        .catch( () => {
           setErrorMessage('Failed to clear notes from server')
           setTimeout(() => setErrorMessage(null), 5000)
         })
     }
-  }
-
-  const loginForm = () => {
-    const hideWhenVisible = { display: loginVisible ? 'none' : '' }
-    const showWhenVisible = { display: loginVisible ? '' : 'none' }
-
-    return (
-      <div>
-        <div style={hideWhenVisible}>
-          <button onClick={() => setLoginVisible(true)}>log in</button>
-        </div>
-        <div style={showWhenVisible}>
-          <LoginForm
-            username={username}
-            password={password}
-            handleUsernameChange={({ target }) => setUsername(target.value)}
-            handlePasswordChange={({ target }) => setPassword(target.value)}
-            handleSubmit={handleLogin}
-          />
-          <button onClick={() => setLoginVisible(false)}>cancel</button>
-        </div>
-      </div>
-    )
   }
 
   const noteForm = () => (
@@ -166,8 +145,18 @@ const App = () => {
       <h1>Notes app</h1>
 
       {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+      {!user &&
+      <Toggleable buttonLabel='log in'>
+        <LoginForm
+          username={username}
+          password={password}
+          handleUsernameChange={({ target }) => setUsername(target.value)}
+          handlePasswordChange={({ target }) => setPassword(target.value)}
+          handleSubmit={handleLogin}
+        />
+      </Toggleable>
+      }
 
-      {!user && loginForm()}
       {user && (
         <div>
           <p>{user.name} logged in</p>

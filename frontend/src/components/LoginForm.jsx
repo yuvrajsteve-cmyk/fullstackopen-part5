@@ -7,10 +7,10 @@ const LoginForm = (props) => {
         <div>
           username
           <input
-            name="Username" 
+            name="Username"
             value={props.username}
             onChange={props.handleUsernameChange}
-            autoComplete="off" 
+            autoComplete="off"
           />
         </div>
         <div>
