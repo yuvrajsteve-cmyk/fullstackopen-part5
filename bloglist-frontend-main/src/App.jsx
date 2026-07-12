@@ -2,15 +2,13 @@ import { useState, useEffect, useRef } from "react"
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Toggleable from "./components/Togglealbe"
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
   const [message, setMessage] = useState(null)
 
   const blogFormRef = useRef()
@@ -46,15 +44,11 @@ const App = () => {
     }
   }
       
-  const addBlog = async (e) => {
-    e.preventDefault()
+  const addBlog = async (blogObject) => {
     try {
-      const newBlog = await blogService.create({ title, author, url }) 
+      const newBlog = await blogService.create(blogObject) 
       setBlogs(blogs.concat(newBlog))
       blogFormRef.current.toggleVisibility()
-      setTitle('')
-      setAuthor('')
-      setUrl('')
       setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
       setTimeout(() => { setMessage(null) }, 5000)
     } catch (exception) {
@@ -125,21 +119,7 @@ const App = () => {
       <h1>login in to application</h1>
       <h2>blogs</h2>
       <Toggleable buttonLabel='create a new blog' ref={blogFormRef}>
-        <form onSubmit={addBlog}>
-        <div>
-          title: <input type="text" value={title}
-            onChange={({ target }) => setTitle(target.value)} />
-        </div>
-        <div>
-          author: <input type="text" value={author}
-            onChange={({ target }) => setAuthor(target.value)} />
-        </div>
-        <div>
-          url: <input type="text" value={url} 
-            onChange={({ target }) => setUrl(target.value)} />
-        </div><br />
-        <button type="submit">create</button>
-      </form>
+        <BlogForm createBlog={addBlog} />
       </Toggleable>
       <h2>username {user?.name} <button onClick={handleLogout}>logout</button></h2>
       {
