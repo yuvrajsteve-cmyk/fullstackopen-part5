@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef } from 'react'
 import blogService from './services/blogs'
 import loginService from './services/login'
-import Toggleable from "./components/Togglealbe"
+import Toggleable from './components/Togglealbe'
 import BlogForm from './components/BlogForm'
 import Blog from './components/Blog'
 
@@ -66,31 +66,31 @@ const App = () => {
         setMessage('Blog remove successfully')
         setTimeout(() => setMessage(null), 5000)
       } catch (exception) {
-          console.log('Error deleting blogs', exception)
+        console.log('Error deleting blogs', exception)
       }
     }
   }
-      
+
   const addBlog = async (blogObject) => {
-  try {
-    const newBlog = await blogService.create(blogObject) 
-    
-    const blogWithUserFields = {
-      ...newBlog,
-      user: {
-        id: newBlog.user,
-        username: user.username,
-        name: user.name
+    try {
+      const newBlog = await blogService.create(blogObject)
+
+      const blogWithUserFields = {
+        ...newBlog,
+        user: {
+          id: newBlog.user,
+          username: user.username,
+          name: user.name
+        }
       }
+      setBlogs(blogs.concat(blogWithUserFields))
+      blogFormRef.current.toggleVisibility()
+      setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
+      setTimeout(() => { setMessage(null) }, 5000)
+    } catch (exception) {
+      console.log('this error', exception.response?.data || exception)
     }
-    setBlogs(blogs.concat(blogWithUserFields)) 
-    blogFormRef.current.toggleVisibility()
-    setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
-    setTimeout(() => { setMessage(null) }, 5000)
-  } catch (exception) {
-    console.log('this error', exception.response?.data || exception)
   }
-}
 
   const handleLogout = async () => {
     window.localStorage.removeItem('loggedBlogappUser')
@@ -101,7 +101,7 @@ const App = () => {
     return (
       <div>
         {message !== null && (
-          <div style={{ 
+          <div style={{
             color: message.includes('wrong') ? 'red' : 'green',
             background: 'lightgrey',
             fontSize: '20px',
@@ -129,17 +129,17 @@ const App = () => {
               password: <input type="password" value={password}
                 onChange={({ target }) => setPassword(target.value)} />
             </label>
-          </div>  
+          </div>
           <button type="submit">login</button>
-        </form> 
+        </form>
       </div>
     )
   }
-    
+
   return (
     <div>
       {message !== null && (
-        <div style={{ 
+        <div style={{
           color: message.includes('wrong') ? 'red' : 'green',
           background: 'lightgrey',
           fontSize: '20px',
@@ -159,16 +159,16 @@ const App = () => {
       </Toggleable>
       <h2>username {user?.name} <button onClick={handleLogout}>logout</button></h2>
       {
-        blogs 
-        .toSorted((a, b) => b.likes - a.likes)
-        .map(blog => 
-          <Blog 
-            key={blog.id} 
-            blog={blog}
-            updatedBlog={handleLikes}
-            deleteBlog={handleDelete}
-            currentUser={user} />
-        )
+        blogs
+          .toSorted((a, b) => b.likes - a.likes)
+          .map(blog =>
+            <Blog
+              key={blog.id}
+              blog={blog}
+              updatedBlog={handleLikes}
+              deleteBlog={handleDelete}
+              currentUser={user} />
+          )
       }
     </div>
   )

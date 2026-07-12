@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from 'react'
 
 const Blog = ({ blog, updatedBlog, deleteBlog, currentUser }) => {
   const [visible, setVisible] = useState(false)
@@ -8,7 +8,7 @@ const Blog = ({ blog, updatedBlog, deleteBlog, currentUser }) => {
     paddingLeft: 2,
     border: 'solid',
     borderWidth: 1,
-    marginBottom: 5, 
+    marginBottom: 5,
   }
 
   const showRemoveButton = blog.user && currentUser && blog.user.username === currentUser.username
@@ -31,7 +31,7 @@ const Blog = ({ blog, updatedBlog, deleteBlog, currentUser }) => {
   return (
     <div style={blogStyle}>
       <div>
-        {blog.title} — {blog.author} 
+        {blog.title} — {blog.author}
         <button onClick={() => setVisible(!visible)}>
           {visible ? 'hide' : 'view'}
         </button>
@@ -41,22 +41,22 @@ const Blog = ({ blog, updatedBlog, deleteBlog, currentUser }) => {
         <div>
           <div>{blog.url}</div>
           <div>
-            likes {blog.likes} 
-            <button onClick={handleLikeClick}>like</button> 
+            likes {blog.likes}
+            <button onClick={handleLikeClick}>like</button>
           </div>
           <div>{blog.user ? blog.user.name : 'anonymous'}</div>
-          
+
           {showRemoveButton && (
             <div style={{ marginTop: 5 }}>
-              <button 
+              <button
                 onClick={handleRemoveClick}
-                style={{ 
-                  backgroundColor: '#4A90E2', 
-                  color: 'white', 
-                  border: 'none', 
-                  padding: '4px 8px', 
-                  borderRadius: '4px', 
-                  cursor: 'pointer' 
+                style={{
+                  backgroundColor: '#4A90E2',
+                  color: 'white',
+                  border: 'none',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
                 }}
               >
                 remove
