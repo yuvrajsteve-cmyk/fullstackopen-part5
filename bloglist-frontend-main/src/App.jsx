@@ -3,6 +3,7 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import Toggleable from "./components/Togglealbe"
 import BlogForm from './components/BlogForm'
+import Blog from './components/Blog'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -124,7 +125,7 @@ const App = () => {
       <h2>username {user?.name} <button onClick={handleLogout}>logout</button></h2>
       {
         blogs.map(blog => 
-          <li key={blog.id}>{blog.title} -- {blog.author} -- {blog.url}</li>
+         <Blog key={blog.id} blog={blog}/>
         )
       }
     </div>
