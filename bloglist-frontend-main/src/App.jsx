@@ -137,8 +137,10 @@ const App = () => {
       </Toggleable>
       <h2>username {user?.name} <button onClick={handleLogout}>logout</button></h2>
       {
-        blogs.map(blog => 
-         <Blog key={blog.id} blog={blog} updatedBlog={handleLikes}/>
+        blogs 
+        .toSorted((a, b) => b.likes - a.likes)
+        .map(blog => 
+          <Blog key={blog.id} blog={blog} updatedBlog={handleLikes} />
         )
       }
     </div>
