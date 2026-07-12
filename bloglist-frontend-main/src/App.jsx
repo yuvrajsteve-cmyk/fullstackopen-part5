@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import blogService from './services/blogs'
 import loginService from './services/login'
+import Toggleable from "./components/Togglealbe"
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -11,6 +12,8 @@ const App = () => {
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
   const [message, setMessage] = useState(null)
+
+  const blogFormRef = useRef()
 
   useEffect(() => {
     blogService.getAll().then(initialBlogs => {
@@ -48,6 +51,7 @@ const App = () => {
     try {
       const newBlog = await blogService.create({ title, author, url }) 
       setBlogs(blogs.concat(newBlog))
+      blogFormRef.current.toggleVisibility()
       setTitle('')
       setAuthor('')
       setUrl('')
@@ -92,7 +96,7 @@ const App = () => {
           </div>
           <div>
             <label>
-              password: <input type="text" value={password}
+              password: <input type="password" value={password}
                 onChange={({ target }) => setPassword(target.value)} />
             </label>
           </div>  
@@ -120,7 +124,8 @@ const App = () => {
 
       <h1>login in to application</h1>
       <h2>blogs</h2>
-      <form onSubmit={addBlog}>
+      <Toggleable buttonLabel='create a new blog' ref={blogFormRef}>
+        <form onSubmit={addBlog}>
         <div>
           title: <input type="text" value={title}
             onChange={({ target }) => setTitle(target.value)} />
@@ -135,6 +140,7 @@ const App = () => {
         </div><br />
         <button type="submit">create</button>
       </form>
+      </Toggleable>
       <h2>username {user?.name} <button onClick={handleLogout}>logout</button></h2>
       {
         blogs.map(blog => 
