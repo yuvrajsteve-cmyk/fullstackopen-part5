@@ -2,18 +2,18 @@ import { render, screen } from '@testing-library/react'
 import Note from './Note'
 import { expect } from 'vitest'
 
-// test 1
-test('renders content', () => {
-  const note = {
-    content: 'Component testing is done with react-testing-library',
-    important: true
-  }
+// // test 1
+// test('renders content', () => {
+//   const note = {
+//     content: 'Component testing is done with react-testing-library',
+//     important: true
+//   }
 
-  render(<Note note={note} />)
+//   render(<Note note={note} />)
 
-  const element = screen.getByText('Component testing is done with react-testing-library')
-  expect(element).toBeDefined()
-})
+//   const element = screen.getByText('Component testing is done with react-testing-library')
+//   expect(element).toBeDefined()
+// })
 
 //test 2
 test('shows right button label when note is not important' , () => {
@@ -51,3 +51,34 @@ test('does not render this', () => {
   const element = screen.queryByText('do not want this thing to be renderd')
   expect(element).toBeNull()
 })
+
+//test 5
+test('renders content', () => {
+  const note = {
+    content: 'Component testing is done with react-testing-library',
+    important: true
+  }
+
+  const { container } = render(<Note note={note}/>)
+
+  const div = container.querySelector('.note')
+  expect(div).toHaveTextContent(
+    'Component testing is done with react-testing-library'
+  )
+})
+
+
+//test 6
+test('Does not render this', () => {
+  const note = {
+    content: 'This is a reminder',
+    important: true
+  }
+
+  render(<Note note={note}/>)
+  screen.debug()
+
+  const element = screen.queryByText('do not want this thing to be renderd')
+  expect(element).toBeNull()
+})
+
