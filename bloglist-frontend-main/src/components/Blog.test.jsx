@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { getByText, render, screen } from '@testing-library/react'
+import { userEvent } from '@testing-library/user-event'
 import Blog from './Blog'
 
 test('renders title and author, but does not render URL or likes by dfault', () => {
@@ -51,4 +51,34 @@ test('after clicking the view button, URL and likes are displayed', async () => 
 
   const likesElement = screen.getByText('likes 10', { exact: false })
   expect(likesElement).toBeDefined()
+})
+
+// 5.15: Blog List Tests, step 3
+test('clicking the like button twice calls the event handler twice', async () => {
+  const blog = {
+    title: 'Testing the react components',
+    author: 'Yuvraj Singh',
+    url: 'www.fullstackopen.com/',
+    likes: 20,
+    user: {
+      username: 'tester',
+      name: 'Test User'
+    }
+  }
+
+  const mockHandler = vi.fn()
+
+  render(<Blog blog={blog} updatedBlog={mockHandler}/>)
+
+  const user = userEvent.setup()
+
+  const viewButton = screen.getByText('view')
+  await user.click(viewButton)
+
+  const likeButton = screen.getByText('like')
+
+  await user.click(likeButton)
+  await user.click(likeButton)
+
+  expect(mockHandler.mock.calls).toHaveLength(2)
 })
