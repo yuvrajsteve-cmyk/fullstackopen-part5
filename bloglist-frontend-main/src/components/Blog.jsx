@@ -11,27 +11,27 @@ const Blog = ({ blog, updatedBlog, deleteBlog, currentUser }) => {
     marginBottom: 5,
   }
 
-  const showRemoveButton = blog.user && currentUser && blog.user.username === currentUser.username
+  const showRemoveButton = blog?.user && currentUser && blog.user.username === currentUser.username
 
   const handleLikeClick = () => {
     const likedBlog = {
-      user : blog.user?.id || null,
-      likes : blog.likes + 1,
-      author : blog.author,
-      title : blog.title,
-      url : blog.url
+      user : blog?.user?.id || null,
+      likes : (blog?.likes || 0) + 1,
+      author : blog?.author,
+      title : blog?.title,
+      url : blog?.url
     }
-    updatedBlog(blog.id, likedBlog)
+    updatedBlog(blog?.id, likedBlog)
   }
 
   const handleRemoveClick = () => {
-    deleteBlog(blog.id, blog.title, blog.author)
+    deleteBlog(blog?.id, blog?.title, blog?.author)
   }
 
   return (
     <div style={blogStyle}>
       <div>
-        {blog.title} — {blog.author}
+        {blog?.title} — {blog?.author}
         <button onClick={() => setVisible(!visible)}>
           {visible ? 'hide' : 'view'}
         </button>
@@ -39,12 +39,12 @@ const Blog = ({ blog, updatedBlog, deleteBlog, currentUser }) => {
 
       {visible && (
         <div>
-          <div>{blog.url}</div>
+          <div>{blog?.url}</div>
           <div>
-            likes {blog.likes}
+            likes {blog?.likes}
             <button onClick={handleLikeClick}>like</button>
           </div>
-          <div>{blog.user ? blog.user.name : 'anonymous'}</div>
+          <div>{blog?.user ? blog.user.name : 'anonymous'}</div>
 
           {showRemoveButton && (
             <div style={{ marginTop: 5 }}>
