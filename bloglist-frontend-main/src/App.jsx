@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import blogService from './services/blogs'
 import loginService from './services/login'
-import Toggleable from './components/Togglealbe'
 import BlogForm from './components/BlogForm'
-import Blog from './components/Blog'
 import SingleBlog from './components/SingleBlog'
 import { Routes, Route, Link, Navigate, useNavigate, useMatch } from 'react-router-dom'
 
@@ -13,7 +11,6 @@ const App = () => {
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [message, setMessage] = useState(null)
-  const blogFormRef = useRef()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -88,9 +85,9 @@ const App = () => {
         }
       }
       setBlogs(blogs.concat(blogWithUserFields))
-      blogFormRef.current.toggleVisibility()
       setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
       setTimeout(() => { setMessage(null) }, 5000)
+      navigate('/')
     } catch (exception) {
       console.log('this error', exception.response?.data || exception)
     }
@@ -135,6 +132,7 @@ const App = () => {
 
       <div style={{ background: 'lightgray', padding: 10, marginBottom: 10 }}>
         <Link style={padding} to="/">blogs</Link>
+        {user && <Link style={padding} to="/create">create new</Link>}
         {user ? (
           <span>
             <em style={{ marginLeft: 10 }}>username {user.name} </em>
@@ -151,11 +149,6 @@ const App = () => {
         <Route path="/" element={
           <div>
             <h2>blogs</h2>
-            {user && (
-              <Toggleable buttonLabel='create a new blog' ref={blogFormRef}>
-                <BlogForm createBlog={addBlog} />
-              </Toggleable>
-            )}
             <div style={{ marginTop: 10 }}>
               {blogs
                 .toSorted((a, b) => b.likes - a.likes)
@@ -169,12 +162,32 @@ const App = () => {
           </div>
         } />
 
+        <Route path="/create" element={
+          user ? (
+            <div>
+              <h2>create new blog</h2>
+              <BlogForm createBlog={addBlog} />
+            </div>
+          ) : (
+            <Navigate replace to="/login" />
+          )
+        } />
+
         <Route path="/blogs/:id" element={
-          <SingleBlog 
-            blog={matchedBlog} 
-            handleLikes={handleLikes} 
-            currentUser={user} 
-          />
+          <div>
+            <SingleBlog 
+              blog={matchedBlog} 
+              handleLikes={handleLikes} 
+              currentUser={user} 
+            />
+            {matchedBlog && user && (matchedBlog.user?.username === user.username || matchedBlog.user === user.id) && (
+              <div style={{ marginTop: 10 }}>
+                <button onClick={() => handleDelete(matchedBlog.id, matchedBlog.title, matchedBlog.author)}>
+                  remove
+                </button>
+              </div>
+            )}
+          </div>
         } />
 
         <Route path="/login" element={
