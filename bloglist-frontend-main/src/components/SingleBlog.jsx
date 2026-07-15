@@ -25,7 +25,7 @@ const SingleBlog = ({ blog, handleLikes, currentUser }) => {
       <div><a href={blog.url} target="_blank" rel="noreferrer">{blog.url}</a></div>
       <div>
         likes {blog.likes}
-        <button onClick={handleLikeClick}>like</button>
+        {currentUser && <button onClick={handleLikeClick}>like</button>}
       </div>
       <div>added by {blog.user?.name || 'anonymous'}</div>
     </div>

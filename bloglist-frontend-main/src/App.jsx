@@ -175,10 +175,10 @@ const App = () => {
 
         <Route path="/blogs/:id" element={
           <div>
-            <SingleBlog 
-              blog={matchedBlog} 
-              handleLikes={handleLikes} 
-              currentUser={user} 
+            <SingleBlog
+              blog={matchedBlog}
+              handleLikes={handleLikes}
+              currentUser={user}
             />
             {matchedBlog && user && (matchedBlog.user?.username === user.username || matchedBlog.user === user.id) && (
               <div style={{ marginTop: 10 }}>

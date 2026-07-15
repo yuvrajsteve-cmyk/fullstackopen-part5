@@ -86,26 +86,23 @@ test('clicking the like button twice calls the event handler twice', async () =>
 
 // 5.16: Blog List Tests, step 4
 test('form calls the event handler with the right details when a new blog is created', async () => {
-  const createBlogMock = vi.fn()
+  const createBlog = vi.fn()
   const user = userEvent.setup()
 
+  const { container } = render(<BlogForm createBlog={createBlog} />)
 
-  const { container } = render(<BlogForm createBlog={createBlogMock} />)
-
-
-  const titleInput = container.querySelector('input[type="title"]')
-  const authorInput = container.querySelector('input[type="name"]')
-  const urlInput = container.querySelector('input[type="text"]')
-  const sendButton = screen.getByText('save')
+  const titleInput = screen.getByPlaceholderText('title')
+  const authorInput = screen.getByPlaceholderText('author')
+  const urlInput = screen.getByPlaceholderText('url')
+  const sendButton = screen.getByText('create')
 
   await user.type(titleInput, 'Testing React Forms')
   await user.type(authorInput, 'Yuvraj Singh')
   await user.type(urlInput, 'www.fullstackopen.com/')
-
   await user.click(sendButton)
 
-  expect(createBlogMock.mock.calls).toHaveLength(1)
-  expect(createBlogMock.mock.calls[0][0].title).toBe('Testing React Forms')
-  expect(createBlogMock.mock.calls[0][0].author).toBe('Yuvraj Singh')
-  expect(createBlogMock.mock.calls[0][0].url).toBe('www.fullstackopen.com/')
+  expect(createBlog.mock.calls).toHaveLength(1)
+  expect(createBlog.mock.calls[0][0].title).toBe('Testing React Forms')
+  expect(createBlog.mock.calls[0][0].author).toBe('Yuvraj Singh')
+  expect(createBlog.mock.calls[0][0].url).toBe('www.fullstackopen.com/')
 })
