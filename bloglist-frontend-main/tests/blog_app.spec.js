@@ -37,7 +37,7 @@ describe('Blog app', () => {
     test('blogs are arranged in the order according to likes, most likes first', async ({ page }) => {
       const blockB = page.locator('.blog', { hasText: titleB }).first()
       await blockB.getByRole('button', { name: 'view' }).click()
-      
+
       const likeButtonB = blockB.getByRole('button', { name: 'like' })
       await likeButtonB.click()
       await page.locator('.blog', { hasText: titleB }).first().getByText('likes 1').waitFor()

@@ -4,6 +4,7 @@ import loginService from './services/login'
 import Toggleable from './components/Togglealbe'
 import BlogForm from './components/BlogForm'
 import Blog from './components/Blog'
+import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -11,8 +12,8 @@ const App = () => {
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [message, setMessage] = useState(null)
-
   const blogFormRef = useRef()
+  const navigate = useNavigate()
 
   useEffect(() => {
     blogService.getAll().then(initialBlogs => {
@@ -38,6 +39,7 @@ const App = () => {
       setUser(loggedUser)
       setUsername('')
       setPassword('')
+      navigate('/')
     } catch {
       console.log('wrong password', username)
       setMessage('wrong username and password')
@@ -86,46 +88,10 @@ const App = () => {
   const handleLogout = async () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
+    navigate('/')
   }
 
-  if (user === null) {
-    return (
-      <div>
-        {message !== null && (
-          <div style={{
-            color: message.includes('wrong') ? 'red' : 'green',
-            background: 'lightgrey',
-            fontSize: '20px',
-            borderStyle: 'solid',
-            borderRadius: '5px',
-            padding: '10px',
-            marginBottom: '10px'
-          }}>
-            {message}
-          </div>
-        )}
-
-        <h1>login in to application</h1>
-        <h2>blogs</h2>
-        <h2>{user?.name} logged in </h2>
-        <form onSubmit={handleLogin}>
-          <div>
-            <label>
-              username: <input id="username" type="text" value={username}
-                onChange={({ target }) => setUsername(target.value)} />
-            </label>
-          </div>
-          <div>
-            <label>
-              password: <input id="password" type="password" value={password}
-                onChange={({ target }) => setPassword(target.value)} />
-            </label>
-          </div>
-          <button type="submit">login</button>
-        </form>
-      </div>
-    )
-  }
+  const padding = { padding: 5 }
 
   return (
     <div>
@@ -143,24 +109,69 @@ const App = () => {
         </div>
       )}
 
+      <div style={{ background: 'lightgray', padding: 10, marginBottom: 10 }}>
+        <Link style={padding} to="/">blogs</Link>
+        {user ? (
+          <span>
+            <em style={{ marginLeft: 10 }}>username {user.name} </em>
+            <button onClick={handleLogout} style={{ marginLeft: 10 }}>logout</button>
+          </span>
+        ) : (
+          <Link style={padding} to="/login">login</Link>
+        )}
+      </div>
+
       <h1>login in to application</h1>
-      <h2>blogs</h2>
-      <Toggleable buttonLabel='create a new blog' ref={blogFormRef}>
-        <BlogForm createBlog={addBlog} />
-      </Toggleable>
-      <h2>username {user?.name} <button onClick={handleLogout}>logout</button></h2>
-      {
-        blogs
-          .toSorted((a, b) => b.likes - a.likes)
-          .map(blog =>
-            <Blog
-              key={blog.id}
-              blog={blog}
-              updatedBlog={handleLikes}
-              deleteBlog={handleDelete}
-              currentUser={user} />
+
+      <Routes>
+        <Route path="/" element={
+          <div>
+            <h2>blogs</h2>
+            {user && (
+              <Toggleable buttonLabel='create a new blog' ref={blogFormRef}>
+                <BlogForm createBlog={addBlog} />
+              </Toggleable>
+            )}
+            {blogs
+              .toSorted((a, b) => b.likes - a.likes)
+              .map(blog =>
+                <Blog
+                  key={blog.id}
+                  blog={blog}
+                  updatedBlog={handleLikes}
+                  deleteBlog={handleDelete}
+                  currentUser={user} />
+              )
+            }
+          </div>
+        } />
+
+        <Route path="/login" element={
+          !user ? (
+            <div>
+              <h2>blogs</h2>
+              <h2>{user?.name} logged in </h2>
+              <form onSubmit={handleLogin}>
+                <div>
+                  <label>
+                    username: <input id="username" type="text" value={username}
+                      onChange={({ target }) => setUsername(target.value)} />
+                  </label>
+                </div>
+                <div>
+                  <label>
+                    password: <input id="password" type="password" value={password}
+                      onChange={({ target }) => setPassword(target.value)} />
+                  </label>
+                </div>
+                <button type="submit">login</button>
+              </form>
+            </div>
+          ) : (
+            <Navigate replace to="/" />
           )
-      }
+        } />
+      </Routes>
     </div>
   )
 }
