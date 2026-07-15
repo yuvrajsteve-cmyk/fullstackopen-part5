@@ -4,7 +4,8 @@ import loginService from './services/login'
 import Toggleable from './components/Togglealbe'
 import BlogForm from './components/BlogForm'
 import Blog from './components/Blog'
-import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom'
+import SingleBlog from './components/SingleBlog'
+import { Routes, Route, Link, Navigate, useNavigate, useMatch } from 'react-router-dom'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -48,15 +49,16 @@ const App = () => {
   }
 
   const handleLikes = async (id, blogObject) => {
-    try{
+    try {
       const updatedBlog = await blogService.update(id, blogObject)
+      const originalBlog = blogs.find(b => b.id === id)
       const blogWithUser = {
         ...updatedBlog,
-        user: blogs.find(b => b.id === id).user
+        user: originalBlog.user
       }
       setBlogs(blogs.map(blog => blog.id === id ? blogWithUser : blog))
-    }catch (exception) {
-      console.log('Error updating likes' , exception)
+    } catch (exception) {
+      console.log('Error updating likes', exception)
     }
   }
 
@@ -67,6 +69,7 @@ const App = () => {
         setBlogs(blogs.filter(b => b.id !== id))
         setMessage('Blog removed successfully')
         setTimeout(() => setMessage(null), 5000)
+        navigate('/')
       } catch (exception) {
         console.log('Error deleting blogs', exception)
       }
@@ -76,7 +79,15 @@ const App = () => {
   const addBlog = async (blogObject) => {
     try {
       const newBlog = await blogService.create(blogObject)
-      setBlogs(blogs.concat(newBlog))
+      const blogWithUserFields = {
+        ...newBlog,
+        user: {
+          id: newBlog.user,
+          username: user.username,
+          name: user.name
+        }
+      }
+      setBlogs(blogs.concat(blogWithUserFields))
       blogFormRef.current.toggleVisibility()
       setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
       setTimeout(() => { setMessage(null) }, 5000)
@@ -91,7 +102,20 @@ const App = () => {
     navigate('/')
   }
 
+  const match = useMatch('/blogs/:id')
+  const matchedBlog = match
+    ? blogs.find(blog => blog.id === match.params.id)
+    : null
+
   const padding = { padding: 5 }
+
+  const blogStyle = {
+    paddingTop: 10,
+    paddingLeft: 2,
+    border: 'solid',
+    borderWidth: 1,
+    marginBottom: 5
+  }
 
   return (
     <div>
@@ -132,25 +156,31 @@ const App = () => {
                 <BlogForm createBlog={addBlog} />
               </Toggleable>
             )}
-            {blogs
-              .toSorted((a, b) => b.likes - a.likes)
-              .map(blog =>
-                <Blog
-                  key={blog.id}
-                  blog={blog}
-                  updatedBlog={handleLikes}
-                  deleteBlog={handleDelete}
-                  currentUser={user} />
-              )
-            }
+            <div style={{ marginTop: 10 }}>
+              {blogs
+                .toSorted((a, b) => b.likes - a.likes)
+                .map(blog =>
+                  <div key={blog.id} style={blogStyle}>
+                    <Link to={`/blogs/${blog.id}`}>{blog.title} — {blog.author}</Link>
+                  </div>
+                )
+              }
+            </div>
           </div>
+        } />
+
+        <Route path="/blogs/:id" element={
+          <SingleBlog 
+            blog={matchedBlog} 
+            handleLikes={handleLikes} 
+            currentUser={user} 
+          />
         } />
 
         <Route path="/login" element={
           !user ? (
             <div>
               <h2>blogs</h2>
-              <h2>{user?.name} logged in </h2>
               <form onSubmit={handleLogin}>
                 <div>
                   <label>
