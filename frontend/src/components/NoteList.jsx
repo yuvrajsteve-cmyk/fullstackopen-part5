@@ -35,7 +35,7 @@ const NoteList = ({ notesToShow,
             <ul>
                 {notesToShow.map(note => (
                     <li key={note.id}>
-                        {note.content} {' '}
+                       <Link to={`/notes/${note.id}`}>{note.content}</Link>
                         <button onClick={() => toggleImportanceOf(note.id)}
                                  style={{marginLeft : '10px',
                                          color : 'black',

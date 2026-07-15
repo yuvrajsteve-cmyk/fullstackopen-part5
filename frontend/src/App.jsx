@@ -5,9 +5,11 @@ import LoginForm from './components/LoginForm'
 import Toggleable from './components/Toggleable'
 import NoteForm from './components/NoteForm'
 import NoteList from './components/NoteList'
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useMatch } from 'react-router-dom'
 import Home from './components/Home'
 import Footer from './components/Footer'
+import Note from './components/Note'
+
 
 const App = () => {
   const [username, setUsername] = useState('')
@@ -113,60 +115,78 @@ const App = () => {
 
   const padding = { padding: 5 }
 
-  return (
-    <Router>
-      <div>
-        <h1>Notes app</h1>
-        {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+ const match = useMatch('/notes/:id')
+const note = match
+  ? notes.find(note => note.id == match.params.id)
+  : null
 
-        <div style={{ background: 'lightgray', padding: 10, marginBottom: 10 }}>
-          <Link style={padding} to="/">home</Link>
-          <Link style={padding} to="/notes">notes</Link>
-          <Link style={padding} to="/create">new note</Link>
-          {user ? (
-            <em style={{ marginLeft: 10 }}>{user.name} logged in</em>
-          ) : (
-            <Link style={padding} to="/login">login</Link>
-          )}
-        </div>
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          
-          <Route path="/notes" element={
-            <NoteList 
-              notesToShow={notesToShow}
-              toggleImportanceOf={toggleImportanceOf}
-              deleteNoteOf={deleteNoteOf}
-              deleteAllNotes={deleteAllNotes}
-              notes={notes}
-              showAll={showAll}
-              setShowAll={setShowAll}
-            />
-          } />
-          
-          <Route path="/create" element={
-            user ? <NoteForm createNote={addNote} /> : <Navigate replace to="/login" />
-          } />
-          
-          <Route path="/login" element={
-            !user ? (
-              <LoginForm
-                username={username}
-                password={password}
-                handleUsernameChange={({ target }) => setUsername(target.value)}
-                handlePasswordChange={({ target }) => setPassword(target.value)}
-                handleSubmit={handleLogin}
-              />
-            ) : (
-              <Navigate replace to="/notes" />
-            )
-          } />
-        </Routes>
-        <Footer />
+
+
+    return (
+    <div>
+      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+
+      <div style={{ background: 'lightgray', padding: 10, marginBottom: 10 }}>
+        <Link style={padding} to="/">home</Link>
+        <Link style={padding} to="/notes">notes</Link>
+        <Link style={padding} to="/create">new note</Link>
+        {user ? (
+          <em style={{ marginLeft: 10 }}>{user.name} logged in</em>
+        ) : (
+          <Link style={padding} to="/login">login</Link>
+        )}
       </div>
-    </Router>
+
+      <h1>Notes app</h1>
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        
+        <Route path="/notes" element={
+          <NoteList 
+            notesToShow={notesToShow}
+            toggleImportanceOf={toggleImportanceOf}
+            deleteNoteOf={deleteNoteOf}
+            deleteAllNotes={deleteAllNotes}
+            notes={notes}
+            showAll={showAll}
+            setShowAll={setShowAll}
+          />
+        } />
+        
+        <Route path="/create" element={
+          user ? <NoteForm createNote={addNote} /> : <Navigate replace to="/login" />
+        } />
+        
+        <Route path="/login" element={
+          !user ? (
+            <LoginForm
+              username={username}
+              password={password}
+              handleUsernameChange={({ target }) => setUsername(target.value)}
+              handlePasswordChange={({ target }) => setPassword(target.value)}
+              handleSubmit={handleLogin}
+            />
+          ) : (
+            <Navigate replace to="/notes" />
+          )
+        } />
+
+        <Route path='/notes/:id' element={
+          <Note 
+            notes={notes} 
+            toggleImportanceOf={toggleImportanceOf} 
+            deleteNote={deleteNoteOf}
+          />
+        } />
+      </Routes>
+      
+      <Footer />
+    </div>
   )
+
 }
 
 export default App
+
