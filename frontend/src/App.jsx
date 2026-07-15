@@ -4,6 +4,10 @@ import noteService from './services/notes'
 import LoginForm from './components/LoginForm'
 import Toggleable from './components/Toggleable'
 import NoteForm from './components/NoteForm'
+import NoteList from './components/NoteList'
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom'
+import Home from './components/Home'
+import Footer from './components/Footer'
 
 const App = () => {
   const [username, setUsername] = useState('')
@@ -32,24 +36,17 @@ const App = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault()
-
     try {
       const loggedUser = await loginService.login({ username, password })
-
       noteService.setToken(loggedUser.token)
-
-      window.localStorage.setItem(
-        'loggedNoteappUser', JSON.stringify(loggedUser)
-      )
+      window.localStorage.setItem('loggedNoteappUser', JSON.stringify(loggedUser))
       setUser(loggedUser)
       setUsername('')
       setPassword('')
     }
     catch {
       setErrorMessage('wrong credentials')
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
+      setTimeout(() => { setErrorMessage(null) }, 5000)
     }
   }
 
@@ -70,7 +67,6 @@ const App = () => {
   }
 
   const addNote = (noteObject) => {
-    noteFormRef.current.toggleVisibility()
     noteService
       .create(noteObject)
       .then(returnedNote => {
@@ -115,66 +111,61 @@ const App = () => {
     ? notes
     : notes.filter(note => note.important)
 
-  const noteFormRef = useRef()
-
-  const noteForm = () => (
-    <Toggleable buttonLabel='new note' ref={noteFormRef}>
-      <NoteForm createNote={addNote}/>
-    </Toggleable>
-  )
+  const padding = { padding: 5 }
 
   return (
-    <div>
-      <h1>Notes app</h1>
+    <Router>
+      <div>
+        <h1>Notes app</h1>
+        {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
 
-      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-      {!user &&
-      <Toggleable buttonLabel='log in'>
-        <LoginForm
-          username={username}
-          password={password}
-          handleUsernameChange={({ target }) => setUsername(target.value)}
-          handlePasswordChange={({ target }) => setPassword(target.value)}
-          handleSubmit={handleLogin}
-        />
-      </Toggleable>
-      }
-
-      {user && (
-        <div>
-          <p>{user.name} logged in</p>
-          <NoteForm createNote={addNote} />
+        <div style={{ background: 'lightgray', padding: 10, marginBottom: 10 }}>
+          <Link style={padding} to="/">home</Link>
+          <Link style={padding} to="/notes">notes</Link>
+          <Link style={padding} to="/create">new note</Link>
+          {user ? (
+            <em style={{ marginLeft: 10 }}>{user.name} logged in</em>
+          ) : (
+            <Link style={padding} to="/login">login</Link>
+          )}
         </div>
-      )}
 
-      <div>
-        <button onClick={() => setShowAll(!showAll)}>
-          show {showAll ? 'important' : 'all'}
-        </button>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          
+          <Route path="/notes" element={
+            <NoteList 
+              notesToShow={notesToShow}
+              toggleImportanceOf={toggleImportanceOf}
+              deleteNoteOf={deleteNoteOf}
+              deleteAllNotes={deleteAllNotes}
+              notes={notes}
+              showAll={showAll}
+              setShowAll={setShowAll}
+            />
+          } />
+          
+          <Route path="/create" element={
+            user ? <NoteForm createNote={addNote} /> : <Navigate replace to="/login" />
+          } />
+          
+          <Route path="/login" element={
+            !user ? (
+              <LoginForm
+                username={username}
+                password={password}
+                handleUsernameChange={({ target }) => setUsername(target.value)}
+                handlePasswordChange={({ target }) => setPassword(target.value)}
+                handleSubmit={handleLogin}
+              />
+            ) : (
+              <Navigate replace to="/notes" />
+            )
+          } />
+        </Routes>
+        <Footer />
       </div>
-
-      <div>
-        {notes.length > 0 && (
-          <button onClick={deleteAllNotes} style={{ backgroundColor: 'darkred', color: 'white', margin: '10px 0', padding: '5px 10px', cursor: 'pointer' }}>
-            Delete All Notes
-          </button>
-        )}
-
-        <ul>
-          {notesToShow.map(note => (
-            <li key={note.id}>
-              {note.content}{' '}
-              <button onClick={() => toggleImportanceOf(note.id)}>
-                {note.important ? 'make note not important' : 'make important'}
-              </button>
-              <button onClick={() => deleteNoteOf(note.id)} style={{ marginLeft: '10px', color: 'red' }}>
-                delete
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    </Router>
   )
 }
 
