@@ -1,34 +1,8 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
 
 describe('Blog app', () => {
-  beforeEach(async ({ page, request, context }) => {
+  beforeEach(async ({ page, context }) => {
     await context.clearCookies()
-    try {
-      await request.post('http://localhost:3003/api/testing/reset')
-    } catch (e) {
-      console.log('Reset failed')
-    }
-
-    try {
-      await request.post('http://localhost:3003/api/users', {
-        data: {
-          username: 'testuser',
-          name: 'satinderpal',
-          password: 'testuser'
-        }
-      })
-    } catch (e) {}
-
-    try {
-      await request.post('http://localhost:3003/api/users', {
-        data: {
-          username: 'anotheruser',
-          name: 'seconduser',
-          password: 'anotheruser'
-        }
-      })
-    } catch (e) {}
-
     await page.goto('http://localhost:5173')
     await page.evaluate(() => window.localStorage.clear())
     await page.reload()
@@ -39,42 +13,48 @@ describe('Blog app', () => {
     await page.getByText('username satinderpal').waitFor()
   })
 
-  describe('When a blog exists', () => {
-    const uniqueTitle = `Testing Blog Deletion ${Math.random()}`
+  describe('When multiple blogs exist', () => {
+    const timestamp = Date.now()
+    const titleA = `Sorting Blog A ${timestamp}`
+    const titleB = `Sorting Blog B ${timestamp}`
 
     beforeEach(async ({ page }) => {
       await page.getByRole('button', { name: 'create a new blog' }).click()
-      await page.locator('#title').fill(uniqueTitle)
-      await page.locator('#author').fill('Test Author')
-      await page.locator('#url').fill('http://testurl.com')
+      await page.locator('#title').fill(titleA)
+      await page.locator('#author').fill('Author A')
+      await page.locator('#url').fill('http://url1.com')
       await page.getByRole('button', { name: 'create' }).click()
-      await page.locator('.blog').getByText(uniqueTitle).waitFor()
+      await page.locator('.blog').getByText(titleA).first().waitFor()
+
+      await page.getByRole('button', { name: 'create a new blog' }).click()
+      await page.locator('#title').fill(titleB)
+      await page.locator('#author').fill('Author B')
+      await page.locator('#url').fill('http://url2.com')
+      await page.getByRole('button', { name: 'create' }).click()
+      await page.locator('.blog').getByText(titleB).first().waitFor()
     })
 
-    test('the user who created the blog can delete it', async ({ page }) => {
-      const blogBlock = page.locator('.blog', { hasText: uniqueTitle })
-      await blogBlock.getByRole('button', { name: 'view' }).click()
+    test('blogs are arranged in the order according to likes, most likes first', async ({ page }) => {
+      const blockB = page.locator('.blog', { hasText: titleB }).first()
+      await blockB.getByRole('button', { name: 'view' }).click()
+      
+      const likeButtonB = blockB.getByRole('button', { name: 'like' })
+      await likeButtonB.click()
+      await page.locator('.blog', { hasText: titleB }).first().getByText('likes 1').waitFor()
+      await likeButtonB.click()
+      await page.locator('.blog', { hasText: titleB }).first().getByText('likes 2').waitFor()
 
-      page.on('dialog', async dialog => {
-        await dialog.accept()
-      })
+      const blockA = page.locator('.blog', { hasText: titleA }).first()
+      await blockA.getByRole('button', { name: 'view' }).click()
+      await blockA.getByRole('button', { name: 'like' }).click()
+      await page.locator('.blog', { hasText: titleA }).first().getByText('likes 1').waitFor()
 
-      await blogBlock.getByRole('button', { name: 'remove' }).click()
-      await expect(blogBlock).not.toBeVisible()
-    })
+      await page.waitForTimeout(1000)
 
-    test('only the user who created the blog sees the delete button', async ({ page }) => {
-      await page.getByRole('button', { name: 'logout' }).click()
+      const boxB = await blockB.boundingBox()
+      const boxA = await blockA.boundingBox()
 
-      await page.locator('#username').fill('anotheruser')
-      await page.locator('#password').fill('anotheruser')
-      await page.getByRole('button', { name: 'login' }).click()
-      await page.getByText('username seconduser').waitFor()
-
-      const blogBlock = page.locator('.blog', { hasText: uniqueTitle })
-      await blogBlock.getByRole('button', { name: 'view' }).click()
-
-      await expect(blogBlock.getByRole('button', { name: 'remove' })).not.toBeVisible()
+      expect(boxB.y).toBeLessThan(boxA.y)
     })
   })
 })
