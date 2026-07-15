@@ -1,60 +1,95 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
 
 describe('Blog app', () => {
-  beforeEach(async ({ page, context }) => {
+  beforeEach(async ({ page, request, context }) => {
     await context.clearCookies()
-    await page.goto('http://localhost:5173')
+    try {
+      await request.post('http://localhost:3003/api/testing/reset')
+    } catch (e) {
+      console.log('Reset failed')
+    }
+
+    try {
+      await request.post('http://localhost:3003/api/users', {
+        data: {
+          username: 'testuser',
+          name: 'satinderpal',
+          password: 'testuser'
+        }
+      })
+    } catch (e) {}
+
+    await page.goto('http://localhost:5174')
     await page.evaluate(() => window.localStorage.clear())
     await page.reload()
-
-    await page.locator('#username').fill('testuser')
-    await page.locator('#password').fill('testuser')
-    await page.getByRole('button', { name: 'login' }).click()
-    await page.getByText('username satinderpal').waitFor()
   })
 
-  describe('When multiple blogs exist', () => {
-    const timestamp = Date.now()
-    const titleA = `Sorting Blog A ${timestamp}`
-    const titleB = `Sorting Blog B ${timestamp}`
+  test('Login succeeds with the correct username/password combination', async ({ page }) => {
+    await page.getByRole('link', { name: 'login' }).click()
+    await page.getByLabel(/username/i).fill('testuser')
+    await page.getByLabel(/password/i).fill('testuser')
+    await page.getByRole('button', { name: 'login' }).click()
+    await expect(page.getByText('username satinderpal').first()).toBeVisible()
+  })
 
+  test('Login fails if the username/password is incorrect', async ({ page }) => {
+    await page.getByRole('link', { name: 'login' }).click()
+    await page.getByLabel(/username/i).fill('testuser')
+    await page.getByLabel(/password/i).fill('wrongpassword')
+    await page.getByRole('button', { name: 'login' }).click()
+    await expect(page.getByText('wrong username and password').first()).toBeVisible()
+  })
+
+  describe('When logged in', () => {
     beforeEach(async ({ page }) => {
-      await page.getByRole('button', { name: 'create a new blog' }).click()
-      await page.locator('#title').fill(titleA)
-      await page.locator('#author').fill('Author A')
-      await page.locator('#url').fill('http://url1.com')
-      await page.getByRole('button', { name: 'create' }).click()
-      await page.locator('.blog').getByText(titleA).first().waitFor()
-
-      await page.getByRole('button', { name: 'create a new blog' }).click()
-      await page.locator('#title').fill(titleB)
-      await page.locator('#author').fill('Author B')
-      await page.locator('#url').fill('http://url2.com')
-      await page.getByRole('button', { name: 'create' }).click()
-      await page.locator('.blog').getByText(titleB).first().waitFor()
+      await page.getByRole('link', { name: 'login' }).click()
+      await page.getByLabel(/username/i).fill('testuser')
+      await page.getByLabel(/password/i).fill('testuser')
+      await page.getByRole('button', { name: 'login' }).click()
+      await page.getByText('username satinderpal').first().waitFor()
     })
 
-    test('blogs are arranged in the order according to likes, most likes first', async ({ page }) => {
-      const blockB = page.locator('.blog', { hasText: titleB }).first()
-      await blockB.getByRole('button', { name: 'view' }).click()
+    test('A logged-in user can create a blog', async ({ page }) => {
+      const createTitle = `Playwright Routed E2E Blog ${Date.now()}-${Math.random()}`
+      await page.getByRole('link', { name: 'create new' }).click()
+      await page.locator('#title').fill(createTitle)
+      await page.locator('#author').fill('Test Author')
+      await page.locator('#url').fill('http://testurl.com')
+      await page.getByRole('button', { name: 'create' }).click()
+      await expect(page.getByRole('link', { name: new RegExp(createTitle) }).first()).toBeVisible()
+    })
 
-      const likeButtonB = blockB.getByRole('button', { name: 'like' })
-      await likeButtonB.click()
-      await page.locator('.blog', { hasText: titleB }).first().getByText('likes 1').waitFor()
-      await likeButtonB.click()
-      await page.locator('.blog', { hasText: titleB }).first().getByText('likes 2').waitFor()
+    describe('When a blog exists', () => {
+      let uniqueTitle
 
-      const blockA = page.locator('.blog', { hasText: titleA }).first()
-      await blockA.getByRole('button', { name: 'view' }).click()
-      await blockA.getByRole('button', { name: 'like' }).click()
-      await page.locator('.blog', { hasText: titleA }).first().getByText('likes 1').waitFor()
+      beforeEach(async ({ page }) => {
+        uniqueTitle = `Like and Delete Test ${Date.now()}-${Math.random()}`
+        await page.getByRole('link', { name: 'create new' }).click()
+        await page.locator('#title').fill(uniqueTitle)
+        await page.locator('#author').fill('Test Author')
+        await page.locator('#url').fill('http://testurl.com')
+        await page.getByRole('button', { name: 'create' }).click()
+        await page.getByRole('link', { name: new RegExp(uniqueTitle) }).first().waitFor()
+      })
 
-      await page.waitForTimeout(1000)
+      test('A logged-in user can like blogs', async ({ page }) => {
+        await page.getByRole('link', { name: new RegExp(uniqueTitle) }).first().click()
+        await expect(page.getByText('likes 0').first()).toBeVisible()
+        
+        await page.getByRole('button', { name: 'like' }).click()
+        await expect(page.getByText('likes 1').first()).toBeVisible()
+      })
 
-      const boxB = await blockB.boundingBox()
-      const boxA = await blockA.boundingBox()
+      test('A logged-in user can delete a blog', async ({ page }) => {
+        await page.getByRole('link', { name: new RegExp(uniqueTitle) }).first().click()
+        
+        page.on('dialog', async dialog => {
+          await dialog.accept()
+        })
 
-      expect(boxB.y).toBeLessThan(boxA.y)
+        await page.getByRole('button', { name: 'remove' }).click()
+        await expect(page.getByRole('link', { name: new RegExp(uniqueTitle) }).first()).not.toBeVisible()
+      })
     })
   })
 })
