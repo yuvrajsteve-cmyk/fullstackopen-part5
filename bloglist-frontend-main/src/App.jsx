@@ -62,8 +62,8 @@ const App = () => {
     if (window.confirm(`Remove blog ${blogTitle} by ${blogAuthor}?`)) {
       try {
         await blogService.remove(id)
-        setBlogs(blogs.filter(blog => blog.id !== id))
-        setMessage('Blog remove successfully')
+        setBlogs(blogs.filter(b => b.id !== id))
+        setMessage('Blog removed successfully')
         setTimeout(() => setMessage(null), 5000)
       } catch (exception) {
         console.log('Error deleting blogs', exception)
@@ -74,16 +74,7 @@ const App = () => {
   const addBlog = async (blogObject) => {
     try {
       const newBlog = await blogService.create(blogObject)
-
-      const blogWithUserFields = {
-        ...newBlog,
-        user: {
-          id: newBlog.user,
-          username: user.username,
-          name: user.name
-        }
-      }
-      setBlogs(blogs.concat(blogWithUserFields))
+      setBlogs(blogs.concat(newBlog))
       blogFormRef.current.toggleVisibility()
       setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
       setTimeout(() => { setMessage(null) }, 5000)
@@ -120,13 +111,13 @@ const App = () => {
         <form onSubmit={handleLogin}>
           <div>
             <label>
-              username: <input type="text" value={username}
+              username: <input id="username" type="text" value={username}
                 onChange={({ target }) => setUsername(target.value)} />
             </label>
           </div>
           <div>
             <label>
-              password: <input type="password" value={password}
+              password: <input id="password" type="password" value={password}
                 onChange={({ target }) => setPassword(target.value)} />
             </label>
           </div>

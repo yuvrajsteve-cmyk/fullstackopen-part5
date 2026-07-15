@@ -27,9 +27,11 @@ const Blog = ({ blog, updatedBlog, deleteBlog, currentUser }) => {
   const handleRemoveClick = () => {
     deleteBlog(blog?.id, blog?.title, blog?.author)
   }
+  console.log('CurrentUser:', currentUser)
+  console.log('BlogUser:', blog?.user)
 
   return (
-    <div style={blogStyle}>
+    <div style={blogStyle} className="blog">
       <div>
         {blog?.title} — {blog?.author}
         <button onClick={() => setVisible(!visible)}>
