@@ -1,34 +1,49 @@
-const SingleBlog = ({ blog, handleLikes, currentUser }) => {
-  if (!blog) {
-    return null
-  }
+import { Card, CardContent, Typography, Button, Box, Link } from '@mui/material'
 
-  const handleLikeClick = () => {
-    if (!currentUser) {
-      alert('You must be logged in to like a blog')
-      return
-    }
+const SingleBlog = ({ blog, handleLikes, handleRemove, currentUser }) => {
+  if (!blog) return null
 
-    const likedBlog = {
-      user: blog.user?.id || blog.user,
-      likes: (blog.likes || 0) + 1,
-      author: blog.author,
-      title: blog.title,
-      url: blog.url
-    }
-    handleLikes(blog.id, likedBlog)
-  }
+  const isCreator = currentUser && blog.user && currentUser.username === blog.user.username
 
   return (
-    <div>
-      <h2>{blog.title} by {blog.author}</h2>
-      <div><a href={blog.url} target="_blank" rel="noreferrer">{blog.url}</a></div>
-      <div>
-        likes {blog.likes}
-        {currentUser && <button onClick={handleLikeClick}>like</button>}
-      </div>
-      <div>added by {blog.user?.name || 'anonymous'}</div>
-    </div>
+    <Card sx={{ mt: 3, p: 2, boxShadow: 3 }}>
+      <CardContent>
+        <Typography variant="h4" gutterBottom>{blog.title}</Typography>
+
+        <Link href={blog.url} target="_blank" rel="noopener" sx={{ display: 'block', mb: 2 }}>
+          {blog.url}
+        </Link>
+
+        <Typography variant="body1" sx={{ mt: 1, mb: 1 }}>
+          {blog.likes} likes
+          {currentUser && (
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ ml: 2 }}
+              onClick={() => handleLikes(blog.id, { ...blog, likes: blog.likes + 1 })}
+            >
+              LIKE
+            </Button>
+          )}
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+          added by {blog.user?.name || 'Unknown'}
+        </Typography>
+
+        {isCreator && (
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => handleRemove(blog.id)}
+          >
+            REMOVE
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

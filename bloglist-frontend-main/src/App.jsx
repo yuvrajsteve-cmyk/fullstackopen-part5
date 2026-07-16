@@ -64,6 +64,18 @@ const App = () => {
       setTimeout(() => setNotification(null), 5000)
     }
   }
+  const handleLikes = async (id, blogObject) => {
+    await blogService.update(id, blogObject)
+    setBlogs(blogs.map(b => b.id !== id ? b : { ...b, likes: blogObject.likes }))
+  }
+
+  const handleRemove = async (id) => {
+    if (window.confirm('Remove blog?')) {
+      await blogService.remove(id)
+      setBlogs(blogs.filter(b => b.id !== id))
+      navigate('/')
+    }
+  }
 
   const match = useMatch('/blogs/:id')
   const matchedBlog = match ? blogs.find(b => b.id === match.params.id) : null
@@ -100,7 +112,10 @@ const App = () => {
           </div>
         } />
         <Route path="/create" element={user ? <BlogForm createBlog={addBlog} /> : <Navigate to="/login" />} />
-        <Route path="/blogs/:id" element={<SingleBlog blog={matchedBlog} />} />
+        <Route path="/blogs/:id" element={<SingleBlog blog={matchedBlog}
+          handleLikes={handleLikes}
+          handleRemove={handleRemove} 
+          currentUser={user}/>} />
         <Route path="/login" element={
           !user ? <LoginForm
             handleSubmit={handleLogin}
