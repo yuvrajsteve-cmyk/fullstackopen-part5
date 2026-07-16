@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Link, Navigate, useNavigate, useMatch } from 'react-router-dom'
-import { Container, AppBar, Toolbar, Button, Alert } from '@mui/material'
+import { Container, AppBar, Toolbar, Button, Typography, Box } from '@mui/material'
 
 import blogService from './services/blogs'
 import loginService from './services/login'
 import BlogForm from './components/BlogForm'
 import SingleBlog from './components/SingleBlog'
 import LoginForm from './components/LoginForm'
+import Notification from './components/Notification'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [message, setMessage] = useState(null)
+  const [notification, setNotification] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -40,8 +41,8 @@ const App = () => {
       setPassword('')
       navigate('/')
     } catch {
-      setMessage('wrong username and password')
-      setTimeout(() => setMessage(null), 5000)
+      setNotification({ text: 'wrong username and password', type: 'error' })
+      setTimeout(() => setNotification(null), 5000)
     }
   }
 
@@ -49,6 +50,19 @@ const App = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
     navigate('/')
+  }
+
+  const addBlog = async (blogObject) => {
+    try {
+      const newBlog = await blogService.create(blogObject)
+      setBlogs(blogs.concat(newBlog))
+      setNotification({ text: `a new blog ${newBlog.title} by ${newBlog.author} added`, type: 'success' })
+      setTimeout(() => setNotification(null), 5000)
+      navigate('/')
+    } catch {
+      setNotification({ text: 'Error adding blog', type: 'error' })
+      setTimeout(() => setNotification(null), 5000)
+    }
   }
 
   const match = useMatch('/blogs/:id')
@@ -59,10 +73,11 @@ const App = () => {
       <AppBar position="static">
         <Toolbar>
           <Button color="inherit" component={Link} to="/">blogs</Button>
-          {user && <Button color="inherit" component={Link} to="/create">create new</Button>}
+          {user && <Button color="inherit" component={Link} to="/create">new blog</Button>}
+          <Box sx={{ flexGrow: 1 }} />
           {user ? (
             <>
-              <em style={{ marginLeft: 'auto', marginRight: 10 }}>{user.name} logged in</em>
+              <Typography variant="body1" sx={{ mr: 2 }}>{user.name} logged in</Typography>
               <Button color="inherit" onClick={handleLogout}>logout</Button>
             </>
           ) : (
@@ -71,7 +86,7 @@ const App = () => {
         </Toolbar>
       </AppBar>
 
-      {message && <Alert severity={message.includes('wrong') ? 'error' : 'success'} sx={{ mt: 2 }}>{message}</Alert>}
+      <Notification notification={notification} />
 
       <Routes>
         <Route path="/" element={
@@ -84,7 +99,7 @@ const App = () => {
             )}
           </div>
         } />
-        <Route path="/create" element={user ? <BlogForm /> : <Navigate to="/login" />} />
+        <Route path="/create" element={user ? <BlogForm createBlog={addBlog} /> : <Navigate to="/login" />} />
         <Route path="/blogs/:id" element={<SingleBlog blog={matchedBlog} />} />
         <Route path="/login" element={
           !user ? <LoginForm

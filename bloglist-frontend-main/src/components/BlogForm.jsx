@@ -22,23 +22,26 @@ const BlogForm = ({ createBlog }) => {
 
   return(
     <Box component='form' onSubmit={addBlog} sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2, maxWidth: 400 }}>
-  <Typography variant='h4'>create new</Typography>
-  <TextField  
-    label='title' 
-    value={title}
-    onChange={({ target }) => setTitle(target.value)}
-    />
-    <TextField 
-     label='author'
-     value={author}
-     onChange={({ target }) => setAuthor(target.value)}
-    />
-    <TextField 
-      label='url'
-      value={url}
-      onChange={({ target }) => setUrl(target.value)}
-    />
-    <Button variant='contained' type='submit'>Create</Button>
+      <Typography variant='h4'>create new</Typography>
+      <TextField
+        label='title'
+        value={title}
+        fullWidth
+        onChange={({ target }) => setTitle(target.value)}
+      />
+      <TextField
+        label='author'
+        value={author}
+        fullWidth
+        onChange={({ target }) => setAuthor(target.value)}
+      />
+      <TextField
+        label='url'
+        value={url}
+        fullWidth
+        onChange={({ target }) => setUrl(target.value)}
+      />
+      <Button variant='contained' type='submit'>Create</Button>
     </Box>
   )
 }
