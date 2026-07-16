@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom" // first import the Link from the react router dom
+import { Form, Link } from "react-router-dom" // first import the Link from the react router dom
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, ButtonBase, IconButton } from '@mui/material';
+
 
 const NoteList = ({ notesToShow, 
                     toggleImportanceOf, 
@@ -9,51 +11,48 @@ const NoteList = ({ notesToShow,
                 setShowAll}) => {
 
     return(
+        
         <div>
             <div>
-                <button onClick={() => setShowAll(!showAll)} 
-                         style={{marginLeft : '10px',
-                                         color : 'black',
-                                         border : 'none',
-                                         borderRadius : '10px'}}>
+                <Button variant="contained" onClick={() => setShowAll(!showAll)}>
                     show {showAll ? 'important' : 'all' }
-                </button>
+                </Button>
             </div>
 
+        <TableContainer component={Paper}>
+            <Table>
+                <TableHead>
+                    <TableRow>
+                        <TableCell>Content</TableCell>
+                        <TableCell>Action</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
             {notes.length > 0 && (
-                <button onClick={deleteAllNotes} style={{backgroundColor: 'red',
-                    color : 'white',
-                    margin : '10px 0',
-                    padding : '5px 10px',
-                    cursor : 'pointer',
-                    border : 'none',
-                    borderRadius : '10px'
-                }}>
+                <Button color="error" onClick={deleteAllNotes}>
                     delete all notes
-                </button>
+                </Button>
             )}
             <ul>
                 {notesToShow.map(note => (
-                    <li key={note.id}>
+                    <TableRow key={note.id}>
+                        <TableCell>
                        <Link to={`/notes/${note.id}`}>{note.content}</Link>
-                        <button onClick={() => toggleImportanceOf(note.id)}
-                                 style={{marginLeft : '10px',
-                                         color : 'black',
-                                         border : 'none',
-                                         borderRadius : '10px'}}>
+                        <Button variant="text" size="small" color="red" onClick={() => toggleImportanceOf(note.id)}>
                             {note.important ? 'make note not important' : 'make important'}
-                        </button>
-                        <button onClick={() => deleteNoteOf(note.id)} 
-                                style={{marginLeft : '10px',
-                                         color : 'black',
-                                         border : 'none',
-                                         borderRadius : '10px'}}>
+                        </Button>
+                        <Button variant="contained" color="green" size="small" onClick={() => deleteNoteOf(note.id)} >
                             delete
-                        </button>
-                    </li>
+                        </Button>
+                        </TableCell>
+                    </TableRow>
                 ))}
             </ul>
+            </TableBody>
+            </Table>
+            </TableContainer>
         </div>
+    
     )
 }
 

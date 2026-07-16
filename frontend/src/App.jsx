@@ -9,6 +9,8 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate, useMatch } from
 import Home from './components/Home'
 import Footer from './components/Footer'
 import Note from './components/Note'
+import { AppBar, Button, CardHeader, Container, Toolbar, Typography } from '@mui/material'
+import Notification from './components/Notification'
 
 
 const App = () => {
@@ -18,6 +20,7 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState(null)
   const [notes, setNotes] = useState([])
   const [showAll, setShowAll] = useState(true)
+  const [notification, setNotification] = useState(null)
 
   useEffect(() => {
     noteService
@@ -73,6 +76,7 @@ const App = () => {
       .create(noteObject)
       .then(returnedNote => {
         setNotes(notes.concat(returnedNote))
+        setNotification({ text: `Note '${returnedNote.content}' added!`, type: 'success'})
       })
       .catch((error) => {
         const msg = error.response?.data?.error || 'failed to create note'
@@ -113,7 +117,7 @@ const App = () => {
     ? notes
     : notes.filter(note => note.important)
 
-  const padding = { padding: 5 }
+ 
 
  const match = useMatch('/notes/:id')
 const note = match
@@ -124,66 +128,49 @@ const note = match
 
 
     return (
-    <div>
-      {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-
-      <div style={{ background: 'lightgray', padding: 10, marginBottom: 10 }}>
-        <Link style={padding} to="/">home</Link>
-        <Link style={padding} to="/notes">notes</Link>
-        <Link style={padding} to="/create">new note</Link>
+      <Container>
+    <AppBar position='static'>
+      <Toolbar>
+        <Button color='inherit' component={Link} to='/'>Home</Button>
+        <Button color='inherit' component={Link} to='/notes'>Notes</Button>
+        <Button color='inherit' component={Link} to='/create'>New Notes</Button>
         {user ? (
-          <em style={{ marginLeft: 10 }}>{user.name} logged in</em>
+          <em>{user.name} logged in</em>
         ) : (
-          <Link style={padding} to="/login">login</Link>
+          <Button color='inherit' component={Link} to='/login'>Login</Button>
         )}
-      </div>
+      </Toolbar>
+    </AppBar>
+    <Notification notification={notification}/>
+    {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
 
-      <h1>Notes app</h1>
+   <h1>Notes App</h1>
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        
-        <Route path="/notes" element={
-          <NoteList 
-            notesToShow={notesToShow}
-            toggleImportanceOf={toggleImportanceOf}
-            deleteNoteOf={deleteNoteOf}
-            deleteAllNotes={deleteAllNotes}
-            notes={notes}
-            showAll={showAll}
-            setShowAll={setShowAll}
-          />
-        } />
-        
-        <Route path="/create" element={
-          user ? <NoteForm createNote={addNote} /> : <Navigate replace to="/login" />
-        } />
-        
-        <Route path="/login" element={
-          !user ? (
-            <LoginForm
-              username={username}
-              password={password}
-              handleUsernameChange={({ target }) => setUsername(target.value)}
-              handlePasswordChange={({ target }) => setPassword(target.value)}
-              handleSubmit={handleLogin}
-            />
-          ) : (
-            <Navigate replace to="/notes" />
-          )
-        } />
-
-        <Route path='/notes/:id' element={
-          <Note 
-            notes={notes} 
-            toggleImportanceOf={toggleImportanceOf} 
-            deleteNote={deleteNoteOf}
-          />
-        } />
-      </Routes>
-      
-      <Footer />
-    </div>
+   <Routes>
+    <Route path='/' element={<Home />}/>
+    <Route path='/notes' element={
+      <NoteList 
+      notes={notes}
+      showAll={showAll}
+      toggleImportanceOf={toggleImportanceOf}
+      deleteNoteOf={deleteNoteOf}
+      deleteAllNotes={deleteAllNotes}
+      notesToShow={notesToShow}
+      setShowAll={setShowAll}
+      />
+    }/>
+    <Route path='/create' element={
+      user ? <NoteForm createNote={addNote}/> : <Navigate replace to='/login'/>
+    } />
+    <Route path="/login" element={
+        !user ? <LoginForm /> : <Navigate replace to="/notes" />
+      } />
+    <Route path='/notes/:id' element={
+      <Note notes={notes} toggleImportance={toggleImportanceOf} deleteNote={deleteNoteOf}/>
+    } />  
+   </Routes>
+   <Footer />
+    </Container>
   )
 
 }

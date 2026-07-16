@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { TextField, Button } from '@mui/material'
 
 const NoteForm = ({ createNote }) => {
   const [newNote, setNewNote] = useState('')
@@ -19,11 +20,12 @@ const NoteForm = ({ createNote }) => {
     <div>
       <h2>Create a new note</h2>
       <form onSubmit={addNote}>
-        <input value={newNote} placeholder='write note content here'
+        <TextField
+          label value={newNote} placeholder='write note content here'
           onChange={event => setNewNote(event.target.value)
           }
         />
-        <button type="submit">save</button>
+        <Button type='submit' variant='contained' style={{ margin: 10}}>save</Button>
       </form>
 
     </div>
