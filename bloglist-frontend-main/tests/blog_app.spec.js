@@ -75,14 +75,14 @@ describe('Blog app', () => {
       test('A logged-in user can like blogs', async ({ page }) => {
         await page.getByRole('link', { name: new RegExp(uniqueTitle) }).first().click()
         await expect(page.getByText('likes 0').first()).toBeVisible()
-        
+
         await page.getByRole('button', { name: 'like' }).click()
         await expect(page.getByText('likes 1').first()).toBeVisible()
       })
 
       test('A logged-in user can delete a blog', async ({ page }) => {
         await page.getByRole('link', { name: new RegExp(uniqueTitle) }).first().click()
-        
+
         page.on('dialog', async dialog => {
           await dialog.accept()
         })

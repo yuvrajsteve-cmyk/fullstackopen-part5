@@ -1,9 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { Routes, Route, Link, Navigate, useNavigate, useMatch } from 'react-router-dom'
+import { Container, AppBar, Toolbar, Button, Alert } from '@mui/material'
+
 import blogService from './services/blogs'
 import loginService from './services/login'
 import BlogForm from './components/BlogForm'
 import SingleBlog from './components/SingleBlog'
-import { Routes, Route, Link, Navigate, useNavigate, useMatch } from 'react-router-dom'
+import LoginForm from './components/LoginForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -14,9 +17,7 @@ const App = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    blogService.getAll().then(initialBlogs => {
-      setBlogs(initialBlogs)
-    })
+    blogService.getAll().then(initialBlogs => setBlogs(initialBlogs))
   }, [])
 
   useEffect(() => {
@@ -39,183 +40,63 @@ const App = () => {
       setPassword('')
       navigate('/')
     } catch {
-      console.log('wrong password', username)
       setMessage('wrong username and password')
-      setTimeout(() => { setMessage(null) }, 5000)
+      setTimeout(() => setMessage(null), 5000)
     }
   }
 
-  const handleLikes = async (id, blogObject) => {
-    try {
-      const updatedBlog = await blogService.update(id, blogObject)
-      const originalBlog = blogs.find(b => b.id === id)
-      const blogWithUser = {
-        ...updatedBlog,
-        user: originalBlog.user
-      }
-      setBlogs(blogs.map(blog => blog.id === id ? blogWithUser : blog))
-    } catch (exception) {
-      console.log('Error updating likes', exception)
-    }
-  }
-
-  const handleDelete = async (id, blogTitle, blogAuthor) => {
-    if (window.confirm(`Remove blog ${blogTitle} by ${blogAuthor}?`)) {
-      try {
-        await blogService.remove(id)
-        setBlogs(blogs.filter(b => b.id !== id))
-        setMessage('Blog removed successfully')
-        setTimeout(() => setMessage(null), 5000)
-        navigate('/')
-      } catch (exception) {
-        console.log('Error deleting blogs', exception)
-      }
-    }
-  }
-
-  const addBlog = async (blogObject) => {
-    try {
-      const newBlog = await blogService.create(blogObject)
-      const blogWithUserFields = {
-        ...newBlog,
-        user: {
-          id: newBlog.user,
-          username: user.username,
-          name: user.name
-        }
-      }
-      setBlogs(blogs.concat(blogWithUserFields))
-      setMessage(`a new blog ${newBlog.title} by ${newBlog.author} added`)
-      setTimeout(() => { setMessage(null) }, 5000)
-      navigate('/')
-    } catch (exception) {
-      console.log('this error', exception.response?.data || exception)
-    }
-  }
-
-  const handleLogout = async () => {
+  const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
     navigate('/')
   }
 
   const match = useMatch('/blogs/:id')
-  const matchedBlog = match
-    ? blogs.find(blog => blog.id === match.params.id)
-    : null
-
-  const padding = { padding: 5 }
-
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: 'solid',
-    borderWidth: 1,
-    marginBottom: 5
-  }
+  const matchedBlog = match ? blogs.find(b => b.id === match.params.id) : null
 
   return (
-    <div>
-      {message !== null && (
-        <div style={{
-          color: message.includes('wrong') ? 'red' : 'green',
-          background: 'lightgrey',
-          fontSize: '20px',
-          borderStyle: 'solid',
-          borderRadius: '5px',
-          padding: '10px',
-          marginBottom: '10px'
-        }}>
-          {message}
-        </div>
-      )}
+    <Container>
+      <AppBar position="static">
+        <Toolbar>
+          <Button color="inherit" component={Link} to="/">blogs</Button>
+          {user && <Button color="inherit" component={Link} to="/create">create new</Button>}
+          {user ? (
+            <>
+              <em style={{ marginLeft: 'auto', marginRight: 10 }}>{user.name} logged in</em>
+              <Button color="inherit" onClick={handleLogout}>logout</Button>
+            </>
+          ) : (
+            <Button color="inherit" component={Link} to="/login">login</Button>
+          )}
+        </Toolbar>
+      </AppBar>
 
-      <div style={{ background: 'lightgray', padding: 10, marginBottom: 10 }}>
-        <Link style={padding} to="/">blogs</Link>
-        {user && <Link style={padding} to="/create">create new</Link>}
-        {user ? (
-          <span>
-            <em style={{ marginLeft: 10 }}>username {user.name} </em>
-            <button onClick={handleLogout} style={{ marginLeft: 10 }}>logout</button>
-          </span>
-        ) : (
-          <Link style={padding} to="/login">login</Link>
-        )}
-      </div>
-
-      <h1>login in to application</h1>
+      {message && <Alert severity={message.includes('wrong') ? 'error' : 'success'} sx={{ mt: 2 }}>{message}</Alert>}
 
       <Routes>
         <Route path="/" element={
           <div>
             <h2>blogs</h2>
-            <div style={{ marginTop: 10 }}>
-              {blogs
-                .toSorted((a, b) => b.likes - a.likes)
-                .map(blog =>
-                  <div key={blog.id} style={blogStyle}>
-                    <Link to={`/blogs/${blog.id}`}>{blog.title} — {blog.author}</Link>
-                  </div>
-                )
-              }
-            </div>
-          </div>
-        } />
-
-        <Route path="/create" element={
-          user ? (
-            <div>
-              <h2>create new blog</h2>
-              <BlogForm createBlog={addBlog} />
-            </div>
-          ) : (
-            <Navigate replace to="/login" />
-          )
-        } />
-
-        <Route path="/blogs/:id" element={
-          <div>
-            <SingleBlog
-              blog={matchedBlog}
-              handleLikes={handleLikes}
-              currentUser={user}
-            />
-            {matchedBlog && user && (matchedBlog.user?.username === user.username || matchedBlog.user === user.id) && (
-              <div style={{ marginTop: 10 }}>
-                <button onClick={() => handleDelete(matchedBlog.id, matchedBlog.title, matchedBlog.author)}>
-                  remove
-                </button>
+            {blogs.toSorted((a, b) => b.likes - a.likes).map(blog =>
+              <div key={blog.id} style={{ padding: 10, border: '1px solid #ccc', margin: 5 }}>
+                <Link to={`/blogs/${blog.id}`}>{blog.title} — {blog.author}</Link>
               </div>
             )}
           </div>
         } />
-
+        <Route path="/create" element={user ? <BlogForm /> : <Navigate to="/login" />} />
+        <Route path="/blogs/:id" element={<SingleBlog blog={matchedBlog} />} />
         <Route path="/login" element={
-          !user ? (
-            <div>
-              <h2>blogs</h2>
-              <form onSubmit={handleLogin}>
-                <div>
-                  <label>
-                    username: <input id="username" type="text" value={username}
-                      onChange={({ target }) => setUsername(target.value)} />
-                  </label>
-                </div>
-                <div>
-                  <label>
-                    password: <input id="password" type="password" value={password}
-                      onChange={({ target }) => setPassword(target.value)} />
-                  </label>
-                </div>
-                <button type="submit">login</button>
-              </form>
-            </div>
-          ) : (
-            <Navigate replace to="/" />
-          )
+          !user ? <LoginForm
+            handleSubmit={handleLogin}
+            username={username}
+            password={password}
+            setUsername={setUsername}
+            setPassword={setPassword}
+          /> : <Navigate to="/" />
         } />
       </Routes>
-    </div>
+    </Container>
   )
 }
 
